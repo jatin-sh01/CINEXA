@@ -1,4 +1,4 @@
-import { config } from "../config/config.js";
+import { config } from "../../config/config.js";
 
 const globalErrorHandler = (err, req, res, next) => {
   const statusCode = err.statusCode || 500;

@@ -1,5 +1,5 @@
 import express from "express";
-import globalErrorHandler from "./middlewares/globalErrorHandler.js";
+import globalErrorHandler from "./shared/middlewares/globalErrorHandler.js";
 import movieRouter from "./movie/movieRoutes.js";
 
 const app = express();
