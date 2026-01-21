@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import theaterModel from "./theaterModel.js";
 import createHttpError from "http-errors";
+import movieModel from "../movie/movieModel.js";
 
 const createTheater = async (req, res, next) => {
   try {
@@ -109,10 +110,104 @@ const deleteTheater = async (req, res, next) => {
   }
 };
 
+const updatedMovieIntheater = async (req, res, next) => {
+  try {
+    const theater = await theaterModel
+      .findByIdAndUpdate(
+        req.params.id,
+        {
+          movies: req.movieIds ?? [],
+        },
+        {
+          new: true,
+          runValidators: true,
+        }
+      )
+      .populate("movies");
+
+    if (!theater) {
+      return next(createHttpError(404, "theater not found"));
+    }
+
+    await theater.save();
+    await theater.populate("movies");
+    res.status(200).json({
+      success: true,
+      message: "Theater movies updated successfully",
+      data: theater,
+    });
+  } catch (error) {
+    if (error instanceof mongoose.Error.CastError) {
+      return next(createHttpError(400, "Invalid theater or movie id "));
+    }
+    return next(createHttpError(500, " failed to update theater movies"));
+  }
+};
+
+const getMovieInTheater = async (req, res, next) => {
+  try {
+    const theater = await theaterModel
+      .findById(req.params.id)
+      .populate("movies");
+    if (!theater) {
+      return next(createHttpError(404, "Movie not found"));
+    }
+    res.status(200).json({
+      success: true,
+      message: "Theater movies fetched successfully",
+      data: theater,
+    });
+  } catch (error) {
+    if (error instanceof mongoose.Error.CastError) {
+      return next(createHttpError(400, "Invalid theater  id "));
+    }
+    return next(createHttpError(500, " failed to Fetch theater movies"));
+  }
+};
+
+const checkMovie = async (req, res, next) => {
+  try {
+    const { id, movieId } = req.params;
+
+    if (!mongoose.isValidObjectId(movieId)) {
+      return next(createHttpError(400, "Invalid movie id"));
+    }
+
+    const theater = await theaterModel.findById(id).select("movies");
+    if (!theater) {
+      return next(createHttpError(404, "Theater not found"));
+    }
+
+    const hasMovie = theater.movies.some(
+      (assignedId) => String(assignedId) === String(movieId)
+    );
+
+    if (!hasMovie) {
+      return next(
+        createHttpError(404, "Movie is not scheduled in this theater")
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Movie is scheduled in the theater",
+      data: { theaterId: id, movieId },
+    });
+  } catch (error) {
+    if (error instanceof mongoose.Error.CastError) {
+      return next(createHttpError(400, "Invalid theater id"));
+    }
+    return next(createHttpError(500, "Failed to check movie in theater"));
+  }
+};
+
 export {
   createTheater,
   updateTheater,
   getTheater,
   getAllTheaters,
   deleteTheater,
+  updatedMovieIntheater,
+  getMovieInTheater,
+  checkMovie,
 };
