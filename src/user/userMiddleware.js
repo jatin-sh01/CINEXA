@@ -18,7 +18,10 @@ export const validateBody = (rules) => (req, res, next) => {
   Object.entries(rules).forEach(([field, checks]) => {
     const value = req.body?.[field];
 
-    if (checks.required && (value === undefined || value === null || `${value}`.trim() === "")) {
+    if (
+      checks.required &&
+      (value === undefined || value === null || `${value}`.trim() === "")
+    ) {
       errors[field] = `${field} is required`;
       return;
     }
@@ -27,8 +30,13 @@ export const validateBody = (rules) => (req, res, next) => {
       errors[field] = "Email is invalid";
     }
 
-    if (checks.minLength && typeof value === "string" && value.length < checks.minLength) {
-      errors[field] = `${field} must be at least ${checks.minLength} characters long`;
+    if (
+      checks.minLength &&
+      typeof value === "string" &&
+      value.length < checks.minLength
+    ) {
+      errors[field] =
+        `${field} must be at least ${checks.minLength} characters long`;
     }
   });
 
