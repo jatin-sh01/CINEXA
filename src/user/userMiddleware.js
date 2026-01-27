@@ -5,9 +5,14 @@ import { config } from "../config/config.js";
 const EMAIL_REGEX = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 
 export const normalizeEmail = (req, res, next) => {
+  const normalize = (value) => value.trim().toLowerCase();
+
   if (typeof req.body?.email === "string") {
-    // Normalizing once avoids duplicate documents for cosmetic differences.
-    req.body.email = req.body.email.trim().toLowerCase();
+    req.body.email = normalize(req.body.email);
+  }
+
+  if (typeof req.query?.email === "string") {
+    req.query.email = normalize(req.query.email);
   }
   return next();
 };
@@ -68,4 +73,11 @@ export const authMiddleware = (req, res, next) => {
   } catch (error) {
     return next(createHttpError(401, "Authentication required"));
   }
+};
+
+export const attachEmailQueryToBody = (req, _res, next) => {
+  if (req.query?.email && !req.body?.email) {
+    req.body = { ...req.body, email: req.query.email };
+  }
+  return next();
 };

@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import constants from "../utils/constants.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -27,12 +28,14 @@ const userSchema = new mongoose.Schema(
     userRole: {
       type: String,
       required: true,
-      default: "CUSTOMER",
+      enum: Object.values(constants.USER_ROLE),
+      default: constants.USER_ROLE.customer,
     },
     userStatus: {
       type: String,
       required: true,
-      default: "APPROVED",
+      enum: Object.values(constants.USER_STATUS),
+      default: constants.USER_STATUS.approved,
     },
   },
   { timestamps: true }

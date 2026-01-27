@@ -3,6 +3,8 @@ import createHttpError from "http-errors";
 import jwt from "jsonwebtoken";
 import userModel from "./userModel.js";
 import { config } from "../config/config.js";
+import constants from "../utils/constants.js";
+const { STATUS } = constants;
 
 const ACCESS_TOKEN_TTL = "7d";
 
@@ -89,4 +91,77 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
-export { createUser, loginUser, resetPassword };
+const getUserByEmail = async (req, res, next) => {
+  const email = req.body?.email;
+
+  if (!email) {
+    return next(createHttpError(400, "Email is required"));
+  }
+
+  try {
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return next(createHttpError(404, "User not found"));
+    }
+    return res.status(200).json({
+      success: true,
+      message: "User found",
+      data: user,
+    });
+  } catch (error) {
+    console.error("err in finding the user", error);
+    return next(createHttpError(500, "Error while fetching user"));
+  }
+};
+
+const updateUserRoleOrStatus = async (req, res, next) => {
+  const userId = req.params.id;
+  const { userRole, userStatus } = req.body;
+
+  try {
+    let updateQuery = {};
+    if (userRole) updateQuery.userRole = userRole;
+    if (userStatus) updateQuery.userStatus = userStatus;
+
+    const user = await userModel.findByIdAndUpdate(userId, updateQuery, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!user) {
+      return next(
+        createHttpError(STATUS.NOT_FOUND, "No user found for the given id")
+      );
+    }
+
+    return res.status(STATUS.OK).json({
+      success: true,
+      message: "User updated successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.error(error, error.name);
+    if (error.name === "ValidationError") {
+      let err = {};
+      Object.keys(error.errors).forEach((key) => {
+        err[key] = error.errors[key].message;
+      });
+      return next(
+        createHttpError(STATUS.BAD_REQUEST, {
+          message: "Validation failed",
+          details: err,
+        })
+      );
+    }
+    return next(
+      createHttpError(STATUS.INTERNAL_SERVER_ERROR, "Error while updating user")
+    );
+  }
+};
+export {
+  createUser,
+  loginUser,
+  resetPassword,
+  getUserByEmail,
+  updateUserRoleOrStatus,
+};
