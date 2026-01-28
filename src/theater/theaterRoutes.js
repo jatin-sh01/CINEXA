@@ -14,27 +14,62 @@ import {
   validateTheaterPayload,
   validateMovieIds,
 } from "./theaterMiddleware.js";
+import {
+  authMiddleware,
+  isAdmin,
+  isClientOrAdmin,
+} from "../user/userMiddleware.js";
 
 const theaterRouter = express.Router();
 
-theaterRouter.post("/", validateTheaterPayload, createTheater);
-theaterRouter.get("/", getAllTheaters);
+// CREATE
+theaterRouter.post(
+  "/",
+  authMiddleware,
+  isClientOrAdmin,
+  validateTheaterPayload,
+  createTheater
+);
+
+// DELETE
+theaterRouter.delete(
+  "/:id",
+  authMiddleware,
+  isClientOrAdmin,
+  ensureValidTheaterId,
+  deleteTheater
+);
+
+// READ (single)
 theaterRouter.get("/:id", ensureValidTheaterId, getTheater);
+
+// READ (all)
+theaterRouter.get("/", getAllTheaters);
+
+// UPDATE (PATCH/PUT)
+theaterRouter.patch(
+  "/:id",
+  authMiddleware,
+  isClientOrAdmin,
+  ensureValidTheaterId,
+  updateTheater
+);
 theaterRouter.put(
   "/:id",
+  authMiddleware,
+  isClientOrAdmin,
   ensureValidTheaterId,
   validateTheaterPayload,
   updateTheater
 );
-theaterRouter.delete("/:id", ensureValidTheaterId, deleteTheater);
 
+// PATCH movies in theater
+theaterRouter.patch("/:id/movies", validateMovieIds, updatedMovieIntheater);
+
+// GET movies in theater
 theaterRouter.get("/:id/movies", ensureValidTheaterId, getMovieInTheater);
-theaterRouter.patch(
-  "/:id/movies",
-  ensureValidTheaterId,
-  validateMovieIds,
-  updatedMovieIntheater
-);
+
+// GET specific movie in theater
 theaterRouter.get("/:id/movies/:movieId", ensureValidTheaterId, checkMovie);
 
 export default theaterRouter;
