@@ -24,10 +24,10 @@ const STATUS_CODES = {
 };
 
 const BOOKING_STATUS = {
-  cancelled: "CANCELLED",
-  successfull: "SUCCESSFULL",
-  processing: "IN_PROCESS",
-  expired: "EXPIRED",
+  processing: "processing",
+  cancelled: "cancelled",
+  successfull: "successfull",
+  expired: "expired",
 };
 
 const PAYMENT_STATUS = {

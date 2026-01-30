@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import theaterModel from "./theaterModel.js";
 import createHttpError from "http-errors";
-import movieModel from "../movie/movieModel.js";
 
 const createTheater = async (req, res, next) => {
   try {

@@ -10,7 +10,6 @@ const theaterSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
     pincode: {
       type: Number,
       required: true,
@@ -18,6 +17,15 @@ const theaterSchema = new mongoose.Schema(
     address: {
       type: String,
       required: true,
+    },
+    city: {
+      type: String,
+      required: true,
+    },
+    totalScreens: {
+      type: Number,
+      required: true,
+      min: [1, "Total screens must be a positive number."],
     },
     movies: {
       type: [mongoose.Schema.ObjectId],
@@ -27,4 +35,4 @@ const theaterSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model(" Theater", theaterSchema);
+export default mongoose.model("Theater", theaterSchema);
