@@ -1,8 +1,10 @@
+
 name: Deploy CINEXA to Azure Web App
 
 on:
   push:
     branches: [ master ]
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -13,25 +15,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22'
 
       - name: Install Dependencies
         run: npm install
 
+      - name: Build Project
+        run: npm run build --if-present
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_A71BEC944CBB4F33BCF63E657AD68EAF }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DCCC383A8F0648E9A6D067D3B7A1DC66 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_152C47291CC24DE79A33C5F1D49EB70D }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy to Azure
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: cinexa
