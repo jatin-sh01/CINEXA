@@ -4,26 +4,35 @@ import jwt from "jsonwebtoken";
 import userModel from "./userModel.js";
 import { config } from "../config/config.js";
 import constants from "../utils/constants.js";
+import sendMail from "../utils/emailService.js";
 const { STATUS } = constants;
 
 const ACCESS_TOKEN_TTL = "7d";
 
-const signAccessToken = (userId) =>
-  jwt.sign({ sub: userId }, config.JWT_SECRET, {
-    expiresIn: ACCESS_TOKEN_TTL,
-    issuer: "cinexa.api",
-  });
+const signAccessToken = (user) =>
+  jwt.sign(
+    { sub: user._id, role: user.userRole, email: user.email },
+    config.JWT_SECRET,
+    {
+      expiresIn: ACCESS_TOKEN_TTL,
+      issuer: "cinexa.api",
+    }
+  );
 
 const createUser = async (req, res, next) => {
   const { name, email, password } = req.body;
 
   try {
     const newUser = await userModel.create({ name, email, password });
-    const token = signAccessToken(newUser._id);
+    const token = signAccessToken(newUser);
+    await sendMail(
+      "Welcome to CINEXA!",
+      newUser.email,
+      `Hello ${newUser.name},\n\nWelcome to CINEXA! We're excited to have you on board.`
+    );
     return res.status(201).json({ accessToken: token });
   } catch (error) {
     if (error.code === 11000) {
-      // Surface duplicate emails as 409 so the client knows to prompt for login instead.
       return next(createHttpError(409, "User already exists with this email"));
     }
     console.error("error while creating user", error);
@@ -38,7 +47,6 @@ const loginUser = async (req, res, next) => {
   try {
     user = await userModel.findOne({ email });
     if (!user) {
-      // Generic message prevents attackers from confirming valid emails.
       return next(createHttpError(400, "Invalid credentials"));
     }
   } catch (error) {
@@ -57,7 +65,7 @@ const loginUser = async (req, res, next) => {
   }
 
   try {
-    const token = signAccessToken(user._id);
+    const token = signAccessToken(user);
     return res.status(200).json({ accessToken: token });
   } catch (error) {
     console.error("error while signing the jwt token", error);
@@ -92,7 +100,7 @@ const resetPassword = async (req, res, next) => {
 };
 
 const getUserByEmail = async (req, res, next) => {
-  const email = req.body?.email;
+  const email = req.body?.email || req.query?.email;
 
   if (!email) {
     return next(createHttpError(400, "Email is required"));
@@ -160,12 +168,10 @@ const updateUserRoleOrStatus = async (req, res, next) => {
 };
 
 
-
 export {
   createUser,
   loginUser,
   resetPassword,
   getUserByEmail,
   updateUserRoleOrStatus,
-  
 };

@@ -47,10 +47,16 @@ export const validateTheaterPayload = (req, _res, next) => {
 export const validateMovieIds = async (req, _res, next) => {
   try {
     const { movieIds } = req.body ?? {};
-    if (!Array.isArray(movieIds) || movieIds.length === 0) {
+    if (!Array.isArray(movieIds)) {
       return next(
-        createHttpError(400, "movieIds must be a non-empty array of ids")
+        createHttpError(400, "movieIds must be an array of ids")
       );
+    }
+
+    // Allow empty arrays to clear movies
+    if (movieIds.length === 0) {
+      req.movieIds = [];
+      return next();
     }
 
     const uniqueMovieIds = [...new Set(movieIds.map(String))];

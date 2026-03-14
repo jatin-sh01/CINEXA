@@ -15,6 +15,16 @@ const validateMoviePayload = (req, _res, next) => {
   if (!req.body.releaseStatus?.trim()) errors.push("releaseStatus is required");
   if (!req.body.poster?.trim()) errors.push("poster is required");
 
+  // Validate optional genres field
+  if (req.body.genres !== undefined && !Array.isArray(req.body.genres)) {
+    errors.push("genres must be an array");
+  }
+
+  // Validate optional certificate field
+  if (req.body.certificate && !["U", "UA", "A", "S"].includes(req.body.certificate)) {
+    errors.push("certificate must be one of: U, UA, A, S");
+  }
+
   if (errors.length) {
     return next(createHttpError(400, errors.join(", ")));
   }

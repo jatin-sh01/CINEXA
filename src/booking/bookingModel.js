@@ -3,6 +3,11 @@ import constants from "../utils/constants.js";
 
 const bookingSchema = new mongoose.Schema(
   {
+    showId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Show",
+      required: true,
+    },
     theaterId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Theater",

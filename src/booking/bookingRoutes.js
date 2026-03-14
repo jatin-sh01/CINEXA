@@ -2,9 +2,8 @@ import express from "express";
 import {
   createBooking,
   updateBooking,
-  getAllBooking,
   getBookingById,
-  getBooking
+  getBooking,
 } from "./bookingController.js";
 import { validateBookingCreateRequest } from "./bookingMiddleware.js";
 import {
@@ -18,14 +17,12 @@ const bookingRouter = express.Router();
 bookingRouter.post(
   "/",
   authMiddleware,
-  isClientOrAdmin,
   validateBookingCreateRequest,
   createBooking
 );
 
-bookingRouter.patch("/:id", authMiddleware, isClientOrAdmin, updateBooking);
-bookingRouter.get("/:id", authMiddleware, getBookingById);
-bookingRouter.get("/", authMiddleware, isClientOrAdmin, getAllBooking);
 bookingRouter.get("/", authMiddleware, isClientOrAdmin, getBooking);
+bookingRouter.get("/:id", authMiddleware, getBookingById);
+bookingRouter.patch("/:id", authMiddleware, isClientOrAdmin, updateBooking);
 
 export default bookingRouter;

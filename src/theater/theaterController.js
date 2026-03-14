@@ -1,10 +1,22 @@
 import mongoose from "mongoose";
 import theaterModel from "./theaterModel.js";
 import createHttpError from "http-errors";
+import sendMail from "../utils/emailService.js";
 
 const createTheater = async (req, res, next) => {
   try {
-    const theater = await theaterModel.create(req.body);
+    // Add owner field from authenticated user
+    const theater = await theaterModel.create({
+      ...req.body,
+      owner: req.user.id,
+    });
+
+    await sendMail(
+      "Successfully created a theatre",
+      req.user.email,
+      "You have successfully created a new theatre"
+    );
+
     res.status(201).json({
       success: true,
       message: "Theater created successfully",

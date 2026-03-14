@@ -4,6 +4,9 @@ import paymentModel from "./paymentModel.js";
 import createHttpError from "http-errors";
 import constants from "../utils/constants.js";
 import userModel from "../user/userModel.js";
+import sendMail from "../utils/emailService.js";
+import movieModel from "../movie/movieModel.js";
+import theaterModel from "../theater/theaterModel.js";
 
 const createPayment = async (req, res, next) => {
   try {
@@ -69,6 +72,18 @@ const createPayment = async (req, res, next) => {
     await show.save();
     await booking.save();
     await payment.save();
+
+    // Fetch movie, theater, and user details for the email
+    const user = await userModel.findById(booking.userId);
+    const movie = await movieModel.findById(booking.movieId);
+    const theatre = await theaterModel.findById(booking.theaterId);
+
+    // Send booking success email
+    await sendMail(
+      "Your booking is Successfull",
+      user.email, // Use user's email address
+      `Your booking for ${movie.name} in ${theatre.name} for ${booking.noOfSeats} seats on ${show.timing} is successfull. Your booking id is ${booking._id}`
+    );
 
     return res.status(200).json({
       success: true,

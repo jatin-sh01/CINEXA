@@ -4,6 +4,7 @@ import {
   getShows,
   updateShow,
   deleteShow,
+  getShowById
 } from "./showController.js";
 import { authMiddleware } from "../user/userMiddleware.js";
 import {
@@ -15,10 +16,10 @@ const showRouter = express.Router();
 showRouter.post("/", authMiddleware, validateShowCreateRequest, createShow);
 showRouter.patch("/:id", authMiddleware, updateShow);
 showRouter.get("/", getShows);
+showRouter.get("/:id", getShowById);
 showRouter.delete(
   "/:id",
   authMiddleware,
-  validateShowUpdateRequest,
   deleteShow
 );
 export default showRouter;

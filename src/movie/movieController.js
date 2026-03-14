@@ -1,5 +1,4 @@
 import movieModel from "./movieModel.js";
-import createHttpError from "http-errors";
 
 const createMovie = async (req, res, next) => {
   try {

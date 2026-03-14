@@ -27,6 +27,11 @@ const theaterSchema = new mongoose.Schema(
       required: true,
       min: [1, "Total screens must be a positive number."],
     },
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     movies: {
       type: [mongoose.Schema.ObjectId],
       ref: "Movie",

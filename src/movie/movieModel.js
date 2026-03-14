@@ -49,6 +49,16 @@ const movieSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    genres: {
+      type: [String],
+      default: [],
+      trim: true,
+    },
+    certificate: {
+      type: String,
+      enum: ["U", "UA", "A", "S"],
+      default: "UA",
+    },
   },
   { timestamps: true }
 );

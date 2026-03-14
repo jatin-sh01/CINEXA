@@ -47,6 +47,14 @@ const validateBookingCreateRequest = async (req, res, next) => {
     return next(createHttpError(400, "No movie timing passed"));
   }
 
+  // Validate showId presence and format
+  if (!req.body.showId) {
+    return next(createHttpError(400, "No showId provided"));
+  }
+  if (!ObjectId.isValid(req.body.showId)) {
+    return next(createHttpError(400, "Invalid showId provided"));
+  }
+
   // Validate noOfSeats presence
   if (!req.body.noOfSeats) {
     return next(createHttpError(400, "No seat provided"));
@@ -55,6 +63,5 @@ const validateBookingCreateRequest = async (req, res, next) => {
   // Request is correct
   next();
 };
-
 
 export { validateBookingCreateRequest };

@@ -50,21 +50,23 @@ const validateShowCreateRequest = async (req, res, next) => {
 };
 
 const validateShowUpdateRequest = async (req, res, next) => {
+  const body = req.body || {};
+
   // Prevent updating theaterId or movieId
-  if (req.body.theaterId || req.body.movieId) {
+  if (body.theaterId || body.movieId) {
     return next(
       createHttpError(400, "Updating theaterId or movieId is not allowed")
     );
   }
 
   // Optionally, validate fields if present
-  if (req.body.timing && typeof req.body.timing !== "string") {
+  if (body.timing && typeof body.timing !== "string") {
     return next(createHttpError(400, "Invalid timing format"));
   }
-  if (req.body.noOfSeats && typeof req.body.noOfSeats !== "string") {
+  if (body.noOfSeats && typeof body.noOfSeats !== "string") {
     return next(createHttpError(400, "Invalid noOfSeats format"));
   }
-  if (req.body.price && typeof req.body.price !== "number") {
+  if (body.price && typeof body.price !== "number") {
     return next(createHttpError(400, "Invalid price format"));
   }
 

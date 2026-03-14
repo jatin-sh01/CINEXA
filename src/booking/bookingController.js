@@ -1,11 +1,41 @@
 import bookingModel from "./bookingModel.js";
 import createHttpError from "http-errors";
 import showModel from "../show/showModel.js";
+import constants from "../utils/constants.js";
+import { getSocketIO } from "../realtime/io.js";
+import { markSeatsBooked } from "../realtime/seatState.js";
+
+function parseSeatIds(value) {
+  if (!value || typeof value !== "string") return [];
+  return value
+    .split(",")
+    .map((seat) => seat.trim())
+    .filter(Boolean);
+}
+
+function getOverlappingSeats(requestedSeats, bookedRows) {
+  const booked = new Set();
+  bookedRows.forEach((row) => {
+    parseSeatIds(row.seat).forEach((seat) => booked.add(seat));
+  });
+  return requestedSeats.filter((seat) => booked.has(seat));
+}
 
 const createBooking = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { movieId, theaterId, showId, noOfSeats } = req.body;
+    const { movieId, theaterId, showId, noOfSeats, seat } = req.body;
+    const requestedSeats = parseSeatIds(seat);
+
+    if (!showId) {
+      return next(createHttpError(400, "showId is required"));
+    }
+
+    if (requestedSeats.length && Number(noOfSeats) !== requestedSeats.length) {
+      return next(
+        createHttpError(400, "noOfSeats must match selected seat count")
+      );
+    }
 
     const show = await showModel.findOne({
       movieId,
@@ -16,6 +46,24 @@ const createBooking = async (req, res, next) => {
     if (!show) {
       return next(createHttpError(404, "show not found for booking"));
     }
+
+    const activeBookings = await bookingModel.find({
+      showId,
+      status: {
+        $in: [
+          constants.BOOKING_STATUS.processing,
+          constants.BOOKING_STATUS.successfull,
+        ],
+      },
+    });
+
+    const overlap = getOverlappingSeats(requestedSeats, activeBookings);
+    if (overlap.length) {
+      return next(
+        createHttpError(409, `Seats already booked: ${overlap.join(", ")}`)
+      );
+    }
+
     const totalCost = Number(noOfSeats) * show.price;
     const bookingData = { ...req.body, userId, totalCost };
 
@@ -26,6 +74,18 @@ const createBooking = async (req, res, next) => {
     }
 
     const populatedBooking = await booking.populate("movieId theaterId");
+
+    if (requestedSeats.length) {
+      markSeatsBooked(String(showId), requestedSeats);
+      const io = getSocketIO();
+      if (io) {
+        io.to(`show:${showId}`).emit("seat_booked", {
+          showId,
+          seatIds: requestedSeats,
+        });
+      }
+    }
+
     return res.status(201).json({
       success: true,
       message: "booking created succesfull",

@@ -30,7 +30,14 @@ router.post(
 );
 router.post("/login", normalizeEmail, loginUser);
 router.post("/reset-password", authMiddleware, resetPassword);
-router.get("/user", authMiddleware, isClientOrAdmin, getUserByEmail);
+router.get(
+  "/user",
+  normalizeEmail,
+  attachEmailQueryToBody,
+  authMiddleware,
+  isClientOrAdmin,
+  getUserByEmail
+);
 router.patch("/:id/role", authMiddleware, isAdmin, updateUserRoleOrStatus);
 
 export default router;

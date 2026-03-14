@@ -75,7 +75,7 @@ function authMiddleware(req, res, next) {
 
   try {
     const payload = jwt.verify(token, config.JWT_SECRET);
-    req.user = { id: payload.sub, role: payload.role };
+    req.user = { id: payload.sub, role: payload.role, email: payload.email };
     return next();
   } catch (error) {
     return next(createHttpError(401, "Authentication required"));
@@ -105,13 +105,13 @@ const isAdmin = async (req, res, next) => {
 const isClient = async (req, res, next) => {
   try {
     const user = await userModel.findById(req.user.id || req.user._id);
-    if (!user || user.userRole !== constants.USER_ROLE.client) {
-      return next(createHttpError(401, "User is not a client"));
+    if (!user || user.userRole !== constants.USER_ROLE.customer) {
+      return next(createHttpError(401, "User is not a customer"));
     }
     next();
   } catch (error) {
-    console.error("User is not a client", error);
-    return next(createHttpError(401, "User is not a client"));
+    console.error("User is not a customer", error);
+    return next(createHttpError(401, "User is not a customer"));
   }
 };
 
@@ -120,15 +120,15 @@ const isClientOrAdmin = async (req, res, next) => {
     const user = await userModel.findById(req.user.id || req.user._id);
     if (
       !user ||
-      (user.userRole !== constants.USER_ROLE.client &&
+      (user.userRole !== constants.USER_ROLE.customer &&
         user.userRole !== constants.USER_ROLE.admin)
     ) {
-      return next(createHttpError(401, "User is not a client or admin"));
+      return next(createHttpError(401, "User is not a customer or admin"));
     }
     next();
   } catch (error) {
-    console.error("User is not a client or admin ", error);
-    return next(createHttpError(401, "User is not a client or admin"));
+    console.error("User is not a customer or admin ", error);
+    return next(createHttpError(401, "User is not a customer or admin"));
   }
 };
 
