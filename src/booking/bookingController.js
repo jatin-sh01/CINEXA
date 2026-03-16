@@ -4,6 +4,7 @@ import showModel from "../show/showModel.js";
 import constants from "../utils/constants.js";
 import { getSocketIO } from "../realtime/io.js";
 import { markSeatsBooked } from "../realtime/seatState.js";
+import { sendBookingCreatedMail } from "../utils/emailService.js";
 
 function parseSeatIds(value) {
   if (!value || typeof value !== "string") return [];
@@ -84,6 +85,21 @@ const createBooking = async (req, res, next) => {
           seatIds: requestedSeats,
         });
       }
+    }
+
+    try {
+      await sendBookingCreatedMail({
+        email: req.user.email,
+        name: req.user.email,
+        bookingId: String(booking._id),
+        movieName: populatedBooking.movieId?.name,
+        theaterName: populatedBooking.theaterId?.name,
+        showTiming: booking.timing,
+        seats: booking.seat,
+        amount: booking.totalCost,
+      });
+    } catch (mailError) {
+      console.error("booking created mail failed", mailError);
     }
 
     return res.status(201).json({

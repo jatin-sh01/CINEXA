@@ -7,11 +7,19 @@ import userRouter from "./user/userRoutes.js";
 import bookingRouter from "./booking/bookingRoutes.js";
 import showRouter from "./show/showRoutes.js";
 import paymentRouter from "./payment/paymentRoutes.js";
+import stripeWebhookHandler from "./payment/stripeWebhook.js";
 import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+app.post(
+  "/webhook/stripe",
+  express.raw({ type: "application/json" }),
+  stripeWebhookHandler
+);
+
 app.use(express.json());
+app.use(express.static("public"));
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -44,6 +52,7 @@ app.use("/api/users", userRouter);
 app.use("/api/booking", bookingRouter);
 app.use("/api/show", showRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api/payments", paymentRouter);
 
 app.use(globalErrorHandler);
 export default app;

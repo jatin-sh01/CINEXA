@@ -22,17 +22,18 @@ const createPayment = async (req, res, next) => {
     } = req.body;
 
     const booking = await bookingModel.findById(bookingId);
+    if (!booking) {
+      return next(createHttpError(400, "booking not found"));
+    }
+
     const show = await showModel.findOne({
       movieId: booking.movieId,
       theaterId: booking.theaterId,
       _id: showId,
     });
+
     if (booking.status == constants.BOOKING_STATUS.successfull) {
       return next(createHttpError(400, "booking already done "));
-    }
-
-    if (!booking) {
-      return next(createHttpError(400, "booking not found"));
     }
     const bookTime = new Date(booking.createdAt).getTime();
     const currentTime = Date.now();
@@ -52,9 +53,9 @@ const createPayment = async (req, res, next) => {
       transactionId,
     });
     if (Number(payment.amount) !== Number(booking.totalCost)) {
-      payment.status = constants.PAYMENT_STATUS.failed;
+      payment.paymentStatus = constants.PAYMENT_STATUS.failed;
     }
-    if (!payment || payment.status === constants.PAYMENT_STATUS.failed) {
+    if (!payment || payment.paymentStatus === constants.PAYMENT_STATUS.failed) {
       booking.status = constants.BOOKING_STATUS.cancelled;
       await booking.save();
       await payment.save();
@@ -64,7 +65,7 @@ const createPayment = async (req, res, next) => {
         data: booking,
       });
     }
-    payment.status = constants.PAYMENT_STATUS.success;
+    payment.paymentStatus = constants.PAYMENT_STATUS.success;
     booking.status = constants.BOOKING_STATUS.successfull;
 
     show.noOfSeats = String(Number(show.noOfSeats) - Number(booking.noOfSeats));
@@ -120,7 +121,10 @@ const getAllPayment = async (req, res, next) => {
 
     // Only admin can see all payments, others see their own
     if (!user || user.userRole !== constants.USER_ROLE.admin) {
-      filter.userId = user._id;
+      const bookingIds = await bookingModel
+        .find({ userId: user._id })
+        .distinct("_id");
+      filter.bookingId = { $in: bookingIds };
     }
 
     // Find all payments matching the filter

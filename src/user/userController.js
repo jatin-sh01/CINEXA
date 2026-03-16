@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import userModel from "./userModel.js";
 import { config } from "../config/config.js";
 import constants from "../utils/constants.js";
-import sendMail from "../utils/emailService.js";
+import { sendAccountCreatedMail } from "../utils/emailService.js";
 const { STATUS } = constants;
 
 const ACCESS_TOKEN_TTL = "7d";
@@ -25,11 +25,10 @@ const createUser = async (req, res, next) => {
   try {
     const newUser = await userModel.create({ name, email, password });
     const token = signAccessToken(newUser);
-    await sendMail(
-      "Welcome to CINEXA!",
-      newUser.email,
-      `Hello ${newUser.name},\n\nWelcome to CINEXA! We're excited to have you on board.`
-    );
+    await sendAccountCreatedMail({
+      email: newUser.email,
+      name: newUser.name,
+    });
     return res.status(201).json({ accessToken: token });
   } catch (error) {
     if (error.code === 11000) {
