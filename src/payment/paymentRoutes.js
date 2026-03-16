@@ -124,6 +124,36 @@ async function sendBookingExpiredFallbackMail(booking) {
   });
 }
 
+async function safeSendFallbackMail({
+  type,
+  booking,
+  transactionId,
+  reason,
+  logContext,
+}) {
+  try {
+    if (type === "success") {
+      await sendPaymentSuccessFallbackMail({ booking, transactionId });
+      return;
+    }
+
+    if (type === "failed") {
+      await sendPaymentFailedFallbackMail({
+        booking,
+        transactionId,
+        reason,
+      });
+      return;
+    }
+
+    if (type === "expired") {
+      await sendBookingExpiredFallbackMail(booking);
+    }
+  } catch (mailError) {
+    console.error(`${logContext} mail send error`, mailError);
+  }
+}
+
 async function findPayment({ paymentId, transactionId }) {
   if (paymentId) {
     const byId = await paymentModel.findById(paymentId);
@@ -444,18 +474,13 @@ router.post(
           });
 
           if (failed.statusChanged && failed.booking) {
-            try {
-              await sendPaymentFailedFallbackMail({
-                booking: failed.booking,
-                transactionId: session.id,
-                reason: "Checkout session expired",
-              });
-            } catch (mailError) {
-              console.error(
-                "confirm-checkout-session failed-mail send error",
-                mailError
-              );
-            }
+            await safeSendFallbackMail({
+              type: "failed",
+              booking: failed.booking,
+              transactionId: session.id,
+              reason: "Checkout session expired",
+              logContext: "confirm-checkout-session failed",
+            });
           }
 
           return res.status(200).json({
@@ -491,17 +516,12 @@ router.post(
       });
 
       if (result.statusChanged && result.booking) {
-        try {
-          await sendPaymentSuccessFallbackMail({
-            booking: result.booking,
-            transactionId: session.id,
-          });
-        } catch (mailError) {
-          console.error(
-            "confirm-checkout-session success-mail send error",
-            mailError
-          );
-        }
+        await safeSendFallbackMail({
+          type: "success",
+          booking: result.booking,
+          transactionId: session.id,
+          logContext: "confirm-checkout-session success",
+        });
       }
 
       return res.status(200).json({
@@ -559,18 +579,13 @@ router.post(
           });
 
           if (failed.statusChanged && failed.booking) {
-            try {
-              await sendPaymentFailedFallbackMail({
-                booking: failed.booking,
-                transactionId: intent.id,
-                reason: `Payment intent ${intent.status}`,
-              });
-            } catch (mailError) {
-              console.error(
-                "confirm-payment-intent failed-mail send error",
-                mailError
-              );
-            }
+            await safeSendFallbackMail({
+              type: "failed",
+              booking: failed.booking,
+              transactionId: intent.id,
+              reason: `Payment intent ${intent.status}`,
+              logContext: "confirm-payment-intent failed",
+            });
           }
 
           return res.status(200).json({
@@ -604,17 +619,12 @@ router.post(
       });
 
       if (result.statusChanged && result.booking) {
-        try {
-          await sendPaymentSuccessFallbackMail({
-            booking: result.booking,
-            transactionId: intent.id,
-          });
-        } catch (mailError) {
-          console.error(
-            "confirm-payment-intent success-mail send error",
-            mailError
-          );
-        }
+        await safeSendFallbackMail({
+          type: "success",
+          booking: result.booking,
+          transactionId: intent.id,
+          logContext: "confirm-payment-intent success",
+        });
       }
 
       return res.status(200).json({
@@ -678,14 +688,11 @@ router.post(
           }
         );
 
-        try {
-          await sendBookingExpiredFallbackMail(booking);
-        } catch (mailError) {
-          console.error(
-            "reconcile-booking-status expired-mail send error",
-            mailError
-          );
-        }
+        await safeSendFallbackMail({
+          type: "expired",
+          booking,
+          logContext: "reconcile-booking-status expired",
+        });
 
         return res.status(200).json({
           success: false,
@@ -724,17 +731,12 @@ router.post(
         });
 
         if (reconciled.statusChanged && reconciled.booking) {
-          try {
-            await sendPaymentSuccessFallbackMail({
-              booking: reconciled.booking,
-              transactionId: latestStripePayment.transactionId,
-            });
-          } catch (mailError) {
-            console.error(
-              "reconcile-booking-status success-mail send error",
-              mailError
-            );
-          }
+          await safeSendFallbackMail({
+            type: "success",
+            booking: reconciled.booking,
+            transactionId: latestStripePayment.transactionId,
+            logContext: "reconcile-booking-status success",
+          });
         }
 
         return res.status(200).json({
@@ -761,18 +763,13 @@ router.post(
         });
 
         if (reconciled.statusChanged && reconciled.booking) {
-          try {
-            await sendPaymentFailedFallbackMail({
-              booking: reconciled.booking,
-              transactionId: latestStripePayment.transactionId,
-              reason: "Reconciled failed payment",
-            });
-          } catch (mailError) {
-            console.error(
-              "reconcile-booking-status failed-mail send error",
-              mailError
-            );
-          }
+          await safeSendFallbackMail({
+            type: "failed",
+            booking: reconciled.booking,
+            transactionId: latestStripePayment.transactionId,
+            reason: "Reconciled failed payment",
+            logContext: "reconcile-booking-status failed",
+          });
         }
 
         return res.status(200).json({
