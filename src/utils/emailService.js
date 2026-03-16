@@ -2,8 +2,8 @@ import axios from "axios";
 
 const BRAND_NAME = process.env.MAIL_BRAND_NAME || "CINEXA";
 const BRAND_LOGO_URL =
-  process.env.MAIL_LOGO_CID ||
   process.env.MAIL_LOGO_URL ||
+  process.env.MAIL_LOGO_CID ||
   process.env.BRAND_LOGO_URL ||
   "cid:cinexa-logo@cinexa.mail";
 const BRAND_PRIMARY_COLOR = process.env.MAIL_PRIMARY_COLOR || "#e11d48";
