@@ -166,7 +166,6 @@ const updateUserRoleOrStatus = async (req, res, next) => {
   }
 };
 
-
 export {
   createUser,
   loginUser,

@@ -92,7 +92,11 @@ async function sendPaymentSuccessFallbackMail({ booking, transactionId }) {
   });
 }
 
-async function sendPaymentFailedFallbackMail({ booking, transactionId, reason }) {
+async function sendPaymentFailedFallbackMail({
+  booking,
+  transactionId,
+  reason,
+}) {
   const context = await getBookingEmailContext(booking);
   if (!context?.email) {
     return;
@@ -133,7 +137,11 @@ async function findPayment({ paymentId, transactionId }) {
   return null;
 }
 
-async function markStripePaymentSuccess({ paymentId, transactionId, bookingId }) {
+async function markStripePaymentSuccess({
+  paymentId,
+  transactionId,
+  bookingId,
+}) {
   let statusChanged = false;
   const payment = await findPayment({ paymentId, transactionId });
 
@@ -178,7 +186,11 @@ async function markStripePaymentSuccess({ paymentId, transactionId, bookingId })
   return { booking, payment, statusChanged };
 }
 
-async function markStripePaymentFailed({ paymentId, transactionId, bookingId }) {
+async function markStripePaymentFailed({
+  paymentId,
+  transactionId,
+  bookingId,
+}) {
   let statusChanged = false;
   const payment = await findPayment({ paymentId, transactionId });
 
@@ -418,7 +430,9 @@ router.post(
 
       const metadataUserId = session.metadata?.userId;
       if (metadataUserId && String(metadataUserId) !== String(req.user.id)) {
-        return next(createHttpError(403, "You are not allowed to verify this payment"));
+        return next(
+          createHttpError(403, "You are not allowed to verify this payment")
+        );
       }
 
       if (session.payment_status !== "paid") {
@@ -437,7 +451,10 @@ router.post(
                 reason: "Checkout session expired",
               });
             } catch (mailError) {
-              console.error("confirm-checkout-session failed-mail send error", mailError);
+              console.error(
+                "confirm-checkout-session failed-mail send error",
+                mailError
+              );
             }
           }
 
@@ -480,7 +497,10 @@ router.post(
             transactionId: session.id,
           });
         } catch (mailError) {
-          console.error("confirm-checkout-session success-mail send error", mailError);
+          console.error(
+            "confirm-checkout-session success-mail send error",
+            mailError
+          );
         }
       }
 
@@ -522,11 +542,16 @@ router.post(
 
       const metadataUserId = intent.metadata?.userId;
       if (metadataUserId && String(metadataUserId) !== String(req.user.id)) {
-        return next(createHttpError(403, "You are not allowed to verify this payment"));
+        return next(
+          createHttpError(403, "You are not allowed to verify this payment")
+        );
       }
 
       if (intent.status !== "succeeded") {
-        if (intent.status === "canceled" || intent.status === "requires_payment_method") {
+        if (
+          intent.status === "canceled" ||
+          intent.status === "requires_payment_method"
+        ) {
           const failed = await markStripePaymentFailed({
             paymentId: intent.metadata?.paymentId,
             bookingId: intent.metadata?.bookingId,
@@ -541,7 +566,10 @@ router.post(
                 reason: `Payment intent ${intent.status}`,
               });
             } catch (mailError) {
-              console.error("confirm-payment-intent failed-mail send error", mailError);
+              console.error(
+                "confirm-payment-intent failed-mail send error",
+                mailError
+              );
             }
           }
 
@@ -582,7 +610,10 @@ router.post(
             transactionId: intent.id,
           });
         } catch (mailError) {
-          console.error("confirm-payment-intent success-mail send error", mailError);
+          console.error(
+            "confirm-payment-intent success-mail send error",
+            mailError
+          );
         }
       }
 
@@ -624,7 +655,9 @@ router.post(
       }
 
       if (String(booking.userId) !== String(userId)) {
-        return next(createHttpError(403, "You are not allowed to access this booking"));
+        return next(
+          createHttpError(403, "You are not allowed to access this booking")
+        );
       }
 
       if (
@@ -648,7 +681,10 @@ router.post(
         try {
           await sendBookingExpiredFallbackMail(booking);
         } catch (mailError) {
-          console.error("reconcile-booking-status expired-mail send error", mailError);
+          console.error(
+            "reconcile-booking-status expired-mail send error",
+            mailError
+          );
         }
 
         return res.status(200).json({
@@ -678,7 +714,9 @@ router.post(
         });
       }
 
-      if (latestStripePayment.paymentStatus === constants.PAYMENT_STATUS.success) {
+      if (
+        latestStripePayment.paymentStatus === constants.PAYMENT_STATUS.success
+      ) {
         const reconciled = await markStripePaymentSuccess({
           paymentId: latestStripePayment._id,
           bookingId: booking._id,
@@ -692,7 +730,10 @@ router.post(
               transactionId: latestStripePayment.transactionId,
             });
           } catch (mailError) {
-            console.error("reconcile-booking-status success-mail send error", mailError);
+            console.error(
+              "reconcile-booking-status success-mail send error",
+              mailError
+            );
           }
         }
 
@@ -702,14 +743,17 @@ router.post(
           data: {
             bookingId: reconciled.booking?._id || booking._id,
             bookingStatus:
-              reconciled.booking?.status || constants.BOOKING_STATUS.successfull,
+              reconciled.booking?.status ||
+              constants.BOOKING_STATUS.successfull,
             paymentId: latestStripePayment._id,
             paymentStatus: latestStripePayment.paymentStatus,
           },
         });
       }
 
-      if (latestStripePayment.paymentStatus === constants.PAYMENT_STATUS.failed) {
+      if (
+        latestStripePayment.paymentStatus === constants.PAYMENT_STATUS.failed
+      ) {
         const reconciled = await markStripePaymentFailed({
           paymentId: latestStripePayment._id,
           bookingId: booking._id,
@@ -724,7 +768,10 @@ router.post(
               reason: "Reconciled failed payment",
             });
           } catch (mailError) {
-            console.error("reconcile-booking-status failed-mail send error", mailError);
+            console.error(
+              "reconcile-booking-status failed-mail send error",
+              mailError
+            );
           }
         }
 
