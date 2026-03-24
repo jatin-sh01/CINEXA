@@ -69,31 +69,31 @@ Cinexa provides multiplex operators and moviegoers with a unified booking flow. 
 
 ```mermaid
 graph LR
-	subgraph Client Layer
-		FE[Cinexa Frontend (Vite/React)]
-	end
-	subgraph API Layer
-		API[CINEXA Express API]
-		WS[Socket.IO Server]
-		Stripe[Stripe SDK]
-	end
-	subgraph Worker Layer
-		NS[NotifiactionService]
-		Cron[node-cron]
-		Mail[Nodemailer]
-	end
-	DB[(MongoDB/Mongoose)]
-	FE -->|REST / WebSocket| API
-	API --> WS
-	API -->|CRUD| DB
-	API -->|Payment intents| Stripe
-	Stripe -->|Webhooks| API
-	API -->|Notification docs| DB
-	NS -->|Poll + update| DB
-	Cron --> NS
-	NS --> Mail
-	Mail --> User((Users))
-	WS --> FE
+    subgraph Client Layer
+        FE[Cinexa Frontend (Vite/React)]
+    end
+    subgraph API Layer
+        API[CINEXA Express API]
+        WS[Socket.IO Server]
+        Stripe[Stripe SDK]
+    end
+    subgraph Worker Layer
+        NS[NotifiactionService]
+        Cron[node-cron]
+        Mail[Nodemailer]
+    end
+    DB[(MongoDB/Mongoose)]
+    FE -->|REST / WebSocket| API
+    API --> WS
+    API -->|CRUD| DB
+    API -->|Payment intents| Stripe
+    Stripe -->|Webhooks| API
+    API -->|Notification docs| DB
+    NS -->|Poll + update| DB
+    Cron --> NS
+    NS --> Mail
+    Mail --> User((Users))
+    WS --> FE
 ```
 
 ### HLD: Frontend
@@ -183,45 +183,45 @@ graph LR
 
 ```mermaid
 flowchart TD
-	subgraph Express API
-		Req[HTTP/WS Request]
-		MW[Middleware: auth, validation]
-		CTRL[Domain Controller]
-		SVCS[Service Layer]
-		MODELS[(Mongoose Models)]
-		SOCKET[Socket.IO Gateway]
-		EVENTS[Notification Publisher]
-	end
-	Req --> MW --> CTRL --> SVCS --> MODELS
-	SVCS --> Stripe[Stripe SDK]
-	SVCS --> SOCKET
-	SVCS --> EVENTS --> MODELS
-	SOCKET --> Clients[Connected Clients]
+    subgraph Express API
+        Req[HTTP/WS Request]
+        MW[Middleware: auth, validation]
+        CTRL[Domain Controller]
+        SVCS[Service Layer]
+        MODELS[(Mongoose Models)]
+        SOCKET[Socket.IO Gateway]
+        EVENTS[Notification Publisher]
+    end
+    Req --> MW --> CTRL --> SVCS --> MODELS
+    SVCS --> Stripe[Stripe SDK]
+    SVCS --> SOCKET
+    SVCS --> EVENTS --> MODELS
+    SOCKET --> Clients[Connected Clients]
 
 ```
 
 ```mermaid
 sequenceDiagram
-	participant U as User
-	participant FE as Frontend
-	participant WS as Socket.IO
-	participant API as CINEXA API
-	participant DB as MongoDB
-	participant Stripe as Stripe
-	participant NS as NotificationSvc
-	FE->>API: POST /api/bookings (seats, show)
-	API->>DB: Validate seats + create booking (pending)
-	API->>Stripe: Create PaymentIntent
-	Stripe-->>API: client_secret
-	API-->>FE: bookingId + client_secret
-	FE->>Stripe: Confirm card via Elements
-	Stripe-->>API: Webhook /api/payments/webhook (succeeded)
-	API->>DB: Mark booking confirmed
-	API->>WS: emit booking:confirmed
-	API->>DB: Insert notification doc
-	NS->>DB: Fetch pending notification
-	NS->>User: Send email via Nodemailer
-	NS->>DB: Mark notification sent
+    participant U as User
+    participant FE as Frontend
+    participant WS as Socket.IO
+    participant API as CINEXA API
+    participant DB as MongoDB
+    participant Stripe as Stripe
+    participant NS as NotificationSvc
+    FE->>API: POST /api/bookings (seats, show)
+    API->>DB: Validate seats + create booking (pending)
+    API->>Stripe: Create PaymentIntent
+    Stripe-->>API: client_secret
+    API-->>FE: bookingId + client_secret
+    FE->>Stripe: Confirm card via Elements
+    Stripe-->>API: Webhook /api/payments/webhook (succeeded)
+    API->>DB: Mark booking confirmed
+    API->>WS: emit booking:confirmed
+    API->>DB: Insert notification doc
+    NS->>DB: Fetch pending notification
+    NS->>User: Send email via Nodemailer
+    NS->>DB: Mark notification sent
 ```
 
 **Key entities summary**
@@ -338,33 +338,33 @@ Cinexa splits concerns across client, API, and worker layers. The frontend handl
 
 ```mermaid
 graph TD
-	Visitor --> FE[Cinexa Frontend]
-	FE -->|REST| API[CINEXA API]
-	FE <-->|Socket.IO| WS
-	API --> DB[(MongoDB)]
-	API --> Stripe
-	Stripe --> API
-	API --> NS
-	NS --> DB
-	NS --> SMTP[Nodemailer/SMTP]
-	SMTP --> Visitor
+    Visitor --> FE[Cinexa Frontend]
+    FE -->|REST| API[CINEXA API]
+    FE <-->|Socket.IO| WS
+    API --> DB[(MongoDB)]
+    API --> Stripe
+    Stripe --> API
+    API --> NS
+    NS --> DB
+    NS --> SMTP[Nodemailer/SMTP]
+    SMTP --> Visitor
 ```
 
 ```mermaid
 flowchart LR
-	subgraph Backend Components
-		Router[Express Router]
-		AuthMW[JWT Middleware]
-		DomainCtrl[Domain Controllers]
-		Services[Service Layer]
-		Models[(Mongoose Models)]
-		SocketGateway[Socket.IO Gateway]
-		EventBus[Notification Publisher]
-	end
-	ClientReq[Client Request] --> Router --> AuthMW --> DomainCtrl --> Services --> Models
-	Services --> StripeSDK[Stripe SDK]
-	Services --> SocketGateway --> Clients
-	Services --> EventBus --> Models
+    subgraph Backend Components
+        Router[Express Router]
+        AuthMW[JWT Middleware]
+        DomainCtrl[Domain Controllers]
+        Services[Service Layer]
+        Models[(Mongoose Models)]
+        SocketGateway[Socket.IO Gateway]
+        EventBus[Notification Publisher]
+    end
+    ClientReq[Client Request] --> Router --> AuthMW --> DomainCtrl --> Services --> Models
+    Services --> StripeSDK[Stripe SDK]
+    Services --> SocketGateway --> Clients
+    Services --> EventBus --> Models
 
 ```
 
@@ -404,114 +404,114 @@ Steps: user submits credentials → backend validates → JWT issued → fronten
 
 ```mermaid
 sequenceDiagram
-	participant U as User
-	participant FE as Frontend
-	participant API as CINEXA API
-	U->>FE: Submit signup/login form
-	FE->>API: POST /api/auth/register or /login
-	API->>API: Validate input + bcrypt hash/compare
-	API-->>FE: 200 + JWT + profile
-	FE-->>U: Persist token (AuthContext + storage)
+    participant U as User
+    participant FE as Frontend
+    participant API as CINEXA API
+    U->>FE: Submit signup/login form
+    FE->>API: POST /api/auth/register or /login
+    API->>API: Validate input + bcrypt hash/compare
+    API-->>FE: 200 + JWT + profile
+    FE-->>U: Persist token (AuthContext + storage)
 ```
 
 ### Browse movies and shows flow
 
 ```mermaid
 sequenceDiagram
-	participant FE as Frontend
-	participant API as CINEXA API
-	participant DB as MongoDB
-	FE->>API: GET /api/movies
-	API->>DB: Query movies, aggregated metadata
-	DB-->>API: Movie list
-	API-->>FE: JSON movies
-	FE->>API: GET /api/shows/:movieId
-	API->>DB: Fetch shows + seat availability
-	DB-->>API: Show collection
-	API-->>FE: Showtimes payload
+    participant FE as Frontend
+    participant API as CINEXA API
+    participant DB as MongoDB
+    FE->>API: GET /api/movies
+    API->>DB: Query movies, aggregated metadata
+    DB-->>API: Movie list
+    API-->>FE: JSON movies
+    FE->>API: GET /api/shows/:movieId
+    API->>DB: Fetch shows + seat availability
+    DB-->>API: Show collection
+    API-->>FE: Showtimes payload
 ```
 
 ### Seat selection and booking flow
 
 ```mermaid
 sequenceDiagram
-	participant U as User
-	participant FE as Frontend
-	participant WS as Socket.IO
-	participant API as CINEXA API
-	participant DB as MongoDB
-	U->>FE: Choose seats
-	FE->>WS: emit seat:lock
-	WS->>API: lock request
-	API->>DB: Check availability + persist temporary hold
-	API-->>WS: lock granted/denied
-	WS-->>FE: seat update
-	FE->>API: POST /api/bookings
-	API->>DB: Create booking (pending)
+    participant U as User
+    participant FE as Frontend
+    participant WS as Socket.IO
+    participant API as CINEXA API
+    participant DB as MongoDB
+    U->>FE: Choose seats
+    FE->>WS: emit seat:lock
+    WS->>API: lock request
+    API->>DB: Check availability + persist temporary hold
+    API-->>WS: lock granted/denied
+    WS-->>FE: seat update
+    FE->>API: POST /api/bookings
+    API->>DB: Create booking (pending)
 ```
 
 ### Payment flow
 
 ```mermaid
 sequenceDiagram
-	participant FE as Frontend
-	participant API as CINEXA API
-	participant Stripe as Stripe
-	participant DB as MongoDB
-	FE->>API: POST /api/payments/create-intent
-	API->>Stripe: Create PaymentIntent (amount, seats)
-	Stripe-->>API: client_secret
-	API-->>FE: client_secret
-	FE->>Stripe: Confirm via Elements
-	Stripe-->>API: POST /api/payments/webhook (succeeded)
-	API->>DB: Mark booking confirmed + release holds
+    participant FE as Frontend
+    participant API as CINEXA API
+    participant Stripe as Stripe
+    participant DB as MongoDB
+    FE->>API: POST /api/payments/create-intent
+    API->>Stripe: Create PaymentIntent (amount, seats)
+    Stripe-->>API: client_secret
+    API-->>FE: client_secret
+    FE->>Stripe: Confirm via Elements
+    Stripe-->>API: POST /api/payments/webhook (succeeded)
+    API->>DB: Mark booking confirmed + release holds
 ```
 
 ### Notification dispatch flow
 
 ```mermaid
 sequenceDiagram
-	participant API as CINEXA API
-	participant DB as MongoDB
-	participant NS as NotificationSvc
-	participant SMTP as Email Provider
-	API->>DB: Insert notification {status:p}
-	NS->>DB: Fetch pending notification
-	NS->>SMTP: Send email payload
-	SMTP-->>NS: Delivery status
-	NS->>DB: Update status sent/failed
+    participant API as CINEXA API
+    participant DB as MongoDB
+    participant NS as NotificationSvc
+    participant SMTP as Email Provider
+    API->>DB: Insert notification {status:p}
+    NS->>DB: Fetch pending notification
+    NS->>SMTP: Send email payload
+    SMTP-->>NS: Delivery status
+    NS->>DB: Update status sent/failed
 ```
 
 ### Read/unread notification flow
 
 ```mermaid
 sequenceDiagram
-	participant FE as Frontend
-	participant API as CINEXA API
-	participant DB as MongoDB
-	FE->>API: GET /api/notifications
-	API->>DB: Query notifications by user
-	DB-->>API: List w/ read flags
-	API-->>FE: Notifications JSON
-	FE->>API: PATCH /api/notifications/:id/read
-	API->>DB: Set readAt timestamp
+    participant FE as Frontend
+    participant API as CINEXA API
+    participant DB as MongoDB
+    FE->>API: GET /api/notifications
+    API->>DB: Query notifications by user
+    DB-->>API: List w/ read flags
+    API-->>FE: Notifications JSON
+    FE->>API: PATCH /api/notifications/:id/read
+    API->>DB: Set readAt timestamp
 ```
 
 ### Retry/failure flow
 
 ```mermaid
 sequenceDiagram
-	participant NS as NotificationSvc
-	participant DB as MongoDB
-	participant SMTP as Email Provider
-	NS->>SMTP: Send attempt
-	SMTP-->>NS: Failure response
-	NS->>DB: Increment retryCount
-	alt retryCount < RETRY_LIMIT
-		NS->>NS: Schedule retry after RETRY_BACKOFF_MS
-	else exhausted retries
-		NS->>DB: Mark dead_letter + log alert (TODO)
-	end
+    participant NS as NotificationSvc
+    participant DB as MongoDB
+    participant SMTP as Email Provider
+    NS->>SMTP: Send attempt
+    SMTP-->>NS: Failure response
+    NS->>DB: Increment retryCount
+    alt retryCount < RETRY_LIMIT
+        NS->>NS: Schedule retry after RETRY_BACKOFF_MS
+    else exhausted retries
+        NS->>DB: Mark dead_letter + log alert (TODO)
+    end
 ```
 
 ## Scripts & Running
@@ -591,21 +591,21 @@ CINEXA/
 ```
 Cinexa-frontend/
 └── cinexa-frontend/
-	├── src/
-	│   ├── api/
-	│   ├── components/
-	│   ├── contexts/
-	│   ├── hooks/
-	│   ├── layouts/
-	│   ├── pages/
-	│   ├── services/
-	│   ├── utils/
-	│   └── data/
-	├── public/
-	├── App.jsx
-	├── main.jsx
-	├── App.css
-	└── tailwind.config.js
+    ├── src/
+    │   ├── api/
+    │   ├── components/
+    │   ├── contexts/
+    │   ├── hooks/
+    │   ├── layouts/
+    │   ├── pages/
+    │   ├── services/
+    │   ├── utils/
+    │   └── data/
+    ├── public/
+    ├── App.jsx
+    ├── main.jsx
+    ├── App.css
+    └── tailwind.config.js
 ```
 
 ### NotifiactionService
